@@ -13,9 +13,13 @@ import metabro_core as core  # noqa: E402
 HOOK = ROOT / "hooks" / "metabro.py"
 
 
-def run_hook(payload, home, mode=None):
+def run_hook(payload, home, mode=None, **extra_env):
     env = {**os.environ, "METABRO_HOME": str(home), "CLAUDE_PLUGIN_ROOT": str(ROOT)}
-    env.pop("METABRO_MODE", None)
+    for k in ("METABRO_MODE", "METABRO_ALLOW_HEADLESS", "CLAUDE_CODE_ENTRYPOINT"):
+        env.pop(k, None)
+    env["CLAUDE_CODE_SESSION_ATTENDED"] = "1"
+    env.update(extra_env)
+    env = {k: v for k, v in env.items() if v is not None}
     if mode:
         env["METABRO_MODE"] = mode
     out = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(payload),
@@ -148,6 +152,20 @@ class Hook(unittest.TestCase):
         # history stores token sets, never raw text
         raw = next((self.home / "history").glob("*.jsonl")).read_text()
         self.assertNotIn("weekly status update", raw)
+
+    def test_skips_headless_sessions(self):
+        bad = "No, I told you to use factories, you keep writing raw inserts"
+        self.assertIsNone(run_hook(self.payload(bad), self.home, CLAUDE_CODE_SESSION_ATTENDED="0"))
+        # older Claude Code without the attended flag: fall back to the entrypoint
+        self.assertIsNone(run_hook(self.payload(bad, session="s2"), self.home,
+                                   CLAUDE_CODE_SESSION_ATTENDED=None, CLAUDE_CODE_ENTRYPOINT="sdk-cli"))
+        self.assertIsNotNone(run_hook(self.payload(bad, session="s3"), self.home,
+                                      CLAUDE_CODE_SESSION_ATTENDED=None, CLAUDE_CODE_ENTRYPOINT="cli"))
+        # opt back in for testing
+        self.assertIsNotNone(run_hook(self.payload(bad, session="s4"), self.home,
+                                      CLAUDE_CODE_SESSION_ATTENDED="0", METABRO_ALLOW_HEADLESS="1"))
+        # a skipped headless run leaves no state or history behind
+        self.assertFalse((self.home / "state" / "s1.json").exists())
 
     def test_garbage_stdin_never_breaks(self):
         env = {**os.environ, "METABRO_HOME": str(self.home)}

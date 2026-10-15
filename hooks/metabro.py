@@ -50,7 +50,19 @@ def build_context(mode, signals):
     )
 
 
+def unattended():
+    """True for headless runs (claude -p, the Agent SDK, cron jobs), where nobody reads the bit."""
+    if os.environ.get("METABRO_ALLOW_HEADLESS"):
+        return False
+    attended = os.environ.get("CLAUDE_CODE_SESSION_ATTENDED")
+    if attended is not None:
+        return attended == "0"
+    return os.environ.get("CLAUDE_CODE_ENTRYPOINT", "cli").startswith("sdk")
+
+
 def main():
+    if unattended():
+        return
     try:
         data = json.load(sys.stdin)
     except ValueError:

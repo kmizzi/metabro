@@ -50,6 +50,10 @@ Detection is local and cheap (pattern matching and word-set similarity) and adds
 
 This scans your recent sessions in the current project and gives you a **Meta Score** (Kook → Whitewater Paddler → Line-up Local → Big Wave Legend) with your top real fixes, built from your own repeated prompts and corrections. Post your score.
 
+## Only when you're watching
+
+MetaBro stays silent in headless runs (`claude -p`, the Agent SDK, cron jobs and CI), so your automations never pick up surfer lines. It checks Claude Code's `CLAUDE_CODE_SESSION_ATTENDED` flag. Set `METABRO_ALLOW_HEADLESS=1` to test it headless.
+
 ## Privacy
 
 Everything stays on your machine. To spot repeats across sessions, MetaBro keeps a small history in `~/.claude/metabro/history/` that holds **sets of words, never your prompt text**. Set `METABRO_NO_HISTORY=1` to turn it off, or delete the folder at any time.
@@ -62,7 +66,7 @@ Everything stays on your machine. To spot repeats across sessions, MetaBro keeps
 
 ```
 python3 -m unittest tests/test_metabro.py
-claude --plugin-dir . -p "No, I told you already, use pnpm not npm"
+METABRO_ALLOW_HEADLESS=1 claude --plugin-dir . -p "No, I told you already, use pnpm not npm"
 ```
 
 MIT licensed.
