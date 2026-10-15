@@ -67,6 +67,21 @@ class Scoring(unittest.TestCase):
         kinds = {s["kind"] for s in core.score_prompt(p)[1]}
         self.assertTrue({"procedure", "recurring"} <= kinds, kinds)
 
+    def test_verification_streak_fires_in_chill(self):
+        # Real sequence from a call-processing session: each prompt cleans up after a "done" that wasn't.
+        earlier = ["check the recording and draft the follow up",
+                   "[Image #4] i dont' see the update... abe still showing up on my dial list"]
+        score, sig = core.score_prompt("i just connected a call to jeffrey as well... did you process", earlier)
+        self.assertGreaterEqual(score, core.MODES["chill"]["min_score"])
+        self.assertIn("follow_up_streak", {s["kind"] for s in sig})
+
+    def test_single_verification_is_stoked_only(self):
+        score, _ = core.score_prompt("i dont see the draft in gws-sku")
+        self.assertTrue(core.MODES["stoked"]["min_score"] <= score < core.MODES["chill"]["min_score"])
+
+    def test_plain_why_question_is_quiet(self):
+        self.assertEqual(core.score_prompt("why does recontour have multiple connections")[0], 0)
+
     def test_session_repeat(self):
         p = "fix the flaky checkout test in orders spec failing timezone"
         _, sig = core.score_prompt(p, earlier_prompts=["fix the flaky checkout test in orders spec, timezone failing"])

@@ -1,6 +1,6 @@
 {
   "name": "metabro",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A surfer-bro coach that catches you fixing the surface and tells you which harness change (CLAUDE.md rule, skill, hook, test) would stop it happening again. Modes: chill, stoked, full send.",
   "author": {
     "name": "Kalvin Mizzi"

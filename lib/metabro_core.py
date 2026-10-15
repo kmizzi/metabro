@@ -36,6 +36,13 @@ PATTERNS = [
     (r"(^|[.!?]\s+|\.\.\.\s*)(always|never) (?!mind\b)[a-z]", 2, "durable_instruction"),
     (r"\b(every|each) (day|morning|night|week|month|sprint|release|deploy|monday|tuesday|wednesday|thursday|friday)\b"
      r"|\b(same as|like) (last time|yesterday|last week)\b", 3, "recurring"),
+    # "It said done, but it isn't": the follow-up that a verify step inside the skill should have caught.
+    (r"\bi (don'?t'?|do not|didn'?t'?|can'?t'?) see (the|it|any|my|an?|that|this)\b", 2, "verification"),
+    (r"\bwhy\b[^.?!\n]{0,40}\bstill\b", 2, "verification"),
+    (r"\bstill (showing|shows|there|listed|appears?|showing up|has|have)\b", 2, "verification"),
+    (r"\bdid y\w{0,3}u (actually |even )?(process|send|update|run|save|commit|deploy|check)\b", 2, "verification"),
+    (r"\bwhy (didn'?t|hasn'?t|wasn'?t|isn'?t)\b[^.?!\n]{0,40}\b(updated?|work(ed|ing)?|show(n|ing)?|sent|saved|run|deleted|removed)\b",
+     2, "verification"),
     (r"^\s*no[,.!]", 1, "correction"),
     (r"\bagain\b", 1, "correction"),
     (r"\bstill (broken|failing|wrong|not working|doesn'?t work)\b", 1, "correction"),
@@ -154,15 +161,30 @@ def save_history(cwd, rows):
 
 # ---------- scoring ----------
 
-def score_prompt(prompt, earlier_prompts=(), history=(), session_id=None):
-    """Return (score, signals). Each signal: {kind, weight, detail}."""
-    signals = []
-    seen_kinds = set()
+def pattern_signals(prompt):
+    signals, seen = [], set()
     for rx, weight, kind in COMPILED:
         m = rx.search(prompt)
-        if m and (kind, m.group(0).lower()) not in seen_kinds:
-            seen_kinds.add((kind, m.group(0).lower()))
+        if m and (kind, m.group(0).lower()) not in seen:
+            seen.add((kind, m.group(0).lower()))
             signals.append({"kind": kind, "weight": weight, "detail": f'said "{m.group(0).strip()}"'})
+    return signals
+
+
+FOLLOW_UP_KINDS = {"correction", "verification"}
+
+
+def score_prompt(prompt, earlier_prompts=(), history=(), session_id=None):
+    """Return (score, signals). Each signal: {kind, weight, detail}."""
+    signals = pattern_signals(prompt)
+
+    # A run of fix-ups is the real tell: one "I don't see it" is a hiccup, three in a row is a broken workflow.
+    if any(s["kind"] in FOLLOW_UP_KINDS and s["weight"] >= 2 for s in signals):
+        recent = [p for p in list(earlier_prompts)[-4:]
+                  if any(s["kind"] in FOLLOW_UP_KINDS and s["weight"] >= 2 for s in pattern_signals(p))]
+        if recent:
+            signals.append({"kind": "follow_up_streak", "weight": 2,
+                            "detail": f"{len(recent) + 1} fix-up prompts in the last {min(len(earlier_prompts), 4) + 1}"})
 
     toks = tokens(prompt)
     if len(toks) >= MIN_TOKENS:
@@ -196,6 +218,8 @@ MOVES = {
     "repeat_session": "fixing the cause rather than re-asking: a rule, a test that pins the behaviour, or a hook",
     "repeat_cross": "a skill or slash command that owns this recurring task (name it, e.g. /deploy-check)",
     "recurring": "a skill for the task plus a schedule (a cron job or a /schedule routine) so it runs without being asked",
+    "verification": "a verify step inside the skill or workflow that did the work (name the exact check: re-read the record, reload the list, confirm the draft is gone), so 'done' means done before it reports back",
+    "follow_up_streak": "the root cause of the repeated fix-ups: usually a missing verify step in the skill that produced the result, or a rule about what 'done' means",
     "procedure": "a skill: this step list is the skill body already; save it once and invoke it by name",
 }
 

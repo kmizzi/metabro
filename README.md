@@ -24,6 +24,7 @@ Then Claude does your actual task as normal. The bit never gets in the way of th
 | Correct Claude ("I told you…", "you keep…", "not what I asked") | A CLAUDE.md rule with the exact wording, or a hook/test if it should be impossible |
 | Type a standing instruction into a prompt ("from now on…", "always…") | Move it to CLAUDE.md. A prompt is forgotten when the session ends |
 | Ask for the same thing again, in this session or across sessions | A skill or slash command that owns the task |
+| Clean up after a "done" that wasn't ("I don't see it", "why is it still…", "did you process?") | A verify step inside the skill that did the work, so "done" means done |
 | Hand-write a numbered procedure | It's already a skill body, so save it |
 | Mention a recurring task ("every Monday…") | A skill plus a schedule |
 
