@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "metabro",
+  "description": "MetaBro: stop paddling for every wave by hand.",
+  "owner": {
+    "name": "Kalvin Mizzi"
+  },
+  "plugins": [
+    {
+      "name": "metabro",
+      "description": "A surfer-bro coach that catches you fixing the surface and tells you which harness change would stop it happening again.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "description": "MetaBro: nudges you to fix the harness instead of the surface",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/metabro.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
