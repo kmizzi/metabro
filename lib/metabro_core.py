@@ -106,10 +106,15 @@ def prompt_text(entry):
         content = "\n".join(parts) if parts else None
     if not isinstance(content, str):
         return None
-    content = INJECTED_BLOCKS.sub("", content).strip()
-    if not content or content.startswith(INJECTED_PREFIXES) or len(content) > MAX_PROMPT_CHARS:
+    return typed_text(content)
+
+
+def typed_text(text):
+    """The part of a prompt the user typed, or None when Claude Code injected it (task notifications, ...)."""
+    text = INJECTED_BLOCKS.sub("", text or "").strip()
+    if not text or text.startswith(INJECTED_PREFIXES) or len(text) > MAX_PROMPT_CHARS:
         return None
-    return content
+    return text
 
 
 def read_prompts(transcript_path, limit=40):

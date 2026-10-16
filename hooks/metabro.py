@@ -72,8 +72,7 @@ def main():
     mode = core.get_mode()
     if mode == "off":
         return
-    prompt = data.get("prompt") or ""
-    stripped = prompt.strip()
+    stripped = core.typed_text(data.get("prompt"))
     if not stripped or stripped.startswith(("/", "!", "#")) or "metabro" in stripped.lower():
         return
 

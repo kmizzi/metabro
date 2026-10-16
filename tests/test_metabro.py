@@ -131,6 +131,14 @@ class Hook(unittest.TestCase):
     def test_skips_slash_commands(self):
         self.assertIsNone(run_hook(self.payload("/metabro audit"), self.home))
 
+    def test_skips_task_notifications(self):
+        # A background agent's result arrives as a prompt; its "each release" + numbered steps aren't the user's habit.
+        note = ("<task-notification>\n<task-id>a1</task-id>\n<result>Increment version on each release.\n"
+                "1. Choose a name\n2. Validate it\n3. Fill metadata\n4. Test it\n</result>\n</task-notification>")
+        wrapped = "<system-reminder>\n[SYSTEM NOTIFICATION - NOT USER INPUT]\n" + note + "\n</system-reminder>"
+        for prompt in (note, wrapped):
+            self.assertIsNone(run_hook(self.payload(prompt), self.home, mode="full-send"))
+
     def test_cooldown_in_stoked(self):
         bad = "No, I told you to use factories, you keep writing raw inserts"
         self.assertIsNotNone(run_hook(self.payload(bad), self.home))

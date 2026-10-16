@@ -62,6 +62,8 @@ Everything stays on your machine. To spot repeats across sessions, MetaBro keeps
 
 `python3` on your PATH (preinstalled on macOS and most Linux). If it's missing, MetaBro stays silent and nothing breaks.
 
+MetaBro is built for Claude Code. The coaching runs as a hook, which claude.ai chat doesn't load, and `/metabro audit` reads Claude Code's session history on your machine.
+
 ## Development
 
 ```
