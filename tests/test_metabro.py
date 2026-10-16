@@ -173,5 +173,27 @@ class Hook(unittest.TestCase):
         self.assertEqual((out.returncode, out.stdout), (0, ""))
 
 
+class Audit(unittest.TestCase):
+    def inventory(self, home, cwd):
+        sys.path.insert(0, str(ROOT / "skills" / "metabro" / "scripts"))
+        import audit
+        from unittest import mock
+        with mock.patch.object(Path, "home", return_value=home):
+            return audit.harness_inventory(cwd)
+
+    def test_home_directory_is_not_counted_twice(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            (home / ".claude" / "skills" / "one").mkdir(parents=True)
+            (home / ".claude" / "skills" / "one" / "SKILL.md").write_text("x")
+            (home / ".claude" / "settings.json").write_text(json.dumps({"hooks": {"Stop": [{}]}}))
+            inv = self.inventory(home, home)
+            self.assertEqual((inv["project_skills"], inv["user_skills"], inv["hooks"]), (0, 1, 1))
+            proj = home / "proj"
+            (proj / ".claude" / "skills" / "two").mkdir(parents=True)
+            (proj / ".claude" / "skills" / "two" / "SKILL.md").write_text("x")
+            self.assertEqual(self.inventory(home, proj)["project_skills"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

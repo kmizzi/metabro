@@ -34,19 +34,23 @@ def harness_inventory(cwd):
     cwd, home = Path(cwd), Path.home()
     def count(p, pattern):
         return len(list(p.glob(pattern))) if p.exists() else 0
+    # Run from the home directory, the project's .claude/ IS the user's, so count it once.
+    at_home = cwd.resolve() == home.resolve()
+    project = [] if at_home else [cwd / ".claude" / "settings.json", cwd / ".claude" / "settings.local.json"]
     hooks = 0
-    for s in (cwd / ".claude" / "settings.json", cwd / ".claude" / "settings.local.json",
-              home / ".claude" / "settings.json"):
+    for s in project + [home / ".claude" / "settings.json"]:
         try:
             hooks += sum(len(v) for v in json.loads(s.read_text()).get("hooks", {}).values())
         except (OSError, ValueError, AttributeError):
             pass
     return {
-        "project_claude_md": (cwd / "CLAUDE.md").exists() or (cwd / ".claude" / "CLAUDE.md").exists(),
+        "project_claude_md": (cwd / "CLAUDE.md").exists()
+                             or (not at_home and (cwd / ".claude" / "CLAUDE.md").exists()),
         "user_claude_md": (home / ".claude" / "CLAUDE.md").exists(),
-        "project_skills": count(cwd / ".claude" / "skills", "*/SKILL.md"),
+        "project_skills": 0 if at_home else count(cwd / ".claude" / "skills", "*/SKILL.md"),
         "user_skills": count(home / ".claude" / "skills", "*/SKILL.md"),
-        "commands": count(cwd / ".claude" / "commands", "*.md") + count(home / ".claude" / "commands", "*.md"),
+        "commands": (0 if at_home else count(cwd / ".claude" / "commands", "*.md"))
+                    + count(home / ".claude" / "commands", "*.md"),
         "hooks": hooks,
     }
 
