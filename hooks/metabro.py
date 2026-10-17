@@ -88,9 +88,9 @@ def main():
     score, signals = core.score_prompt(stripped, earlier, history, session_id)
 
     if not os.environ.get("METABRO_NO_HISTORY"):
-        toks = sorted(core.tokens(stripped))
-        if len(toks) >= core.MIN_TOKENS:
-            history.append({"s": session_id, "t": int(time.time()), "k": toks})
+        words = sorted(core.word_set(stripped))
+        if len(words) >= core.MIN_WORDS:
+            history.append({"s": session_id, "t": int(time.time()), "k": words})
             core.save_history(cwd, history)
 
     state = core.load_state(session_id)

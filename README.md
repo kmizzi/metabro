@@ -71,4 +71,4 @@ python3 -m unittest tests/test_metabro.py
 METABRO_ALLOW_HEADLESS=1 claude --plugin-dir . -p "No, I told you already, use pnpm not npm"
 ```
 
-MIT licensed.
+MIT licensed. The icon's 🤙 is from Google's [Noto Emoji](https://github.com/googlefonts/noto-emoji) (Apache 2.0).

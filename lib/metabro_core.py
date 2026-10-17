@@ -1,7 +1,7 @@
 """MetaBro core: spots prompts that are working the surface instead of the harness.
 
 Everything here is local and cheap: regexes, word-set similarity, and a small
-history of *token sets* (never raw prompt text). No network, no model calls.
+history of *word sets* (never raw prompt text). No network, no model calls.
 """
 
 import hashlib
@@ -56,11 +56,11 @@ STOPWORDS = set(
 )
 
 SIMILAR = 0.6
-MIN_TOKENS = 5
+MIN_WORDS = 5
 HISTORY_KEEP = 400
 
 
-def tokens(text):
+def word_set(text):
     return {w for w in re.findall(r"[a-z0-9_./-]{3,}", text.lower()) if w not in STOPWORDS}
 
 
@@ -133,7 +133,7 @@ def read_prompts(transcript_path, limit=40):
     return out[-limit:]
 
 
-# ---------- history (token sets only) ----------
+# ---------- history (word sets only) ----------
 
 def history_path(cwd):
     key = hashlib.sha1((cwd or "?").encode()).hexdigest()[:12]
@@ -191,15 +191,15 @@ def score_prompt(prompt, earlier_prompts=(), history=(), session_id=None):
             signals.append({"kind": "follow_up_streak", "weight": 2,
                             "detail": f"{len(recent) + 1} fix-up prompts in the last {min(len(earlier_prompts), 4) + 1}"})
 
-    toks = tokens(prompt)
-    if len(toks) >= MIN_TOKENS:
-        repeats = sum(1 for p in earlier_prompts if jaccard(toks, tokens(p)) >= SIMILAR)
+    words = word_set(prompt)
+    if len(words) >= MIN_WORDS:
+        repeats = sum(1 for p in earlier_prompts if jaccard(words, word_set(p)) >= SIMILAR)
         if repeats:
             signals.append({"kind": "repeat_session", "weight": 3,
                             "detail": f"near-duplicate of {repeats} earlier prompt(s) this session"})
         other_sessions = {
             h.get("s") for h in history
-            if h.get("s") != session_id and jaccard(toks, set(h.get("k", []))) >= SIMILAR
+            if h.get("s") != session_id and jaccard(words, set(h.get("k", []))) >= SIMILAR
         }
         if other_sessions:
             n = len(other_sessions)

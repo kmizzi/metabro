@@ -93,7 +93,7 @@ class Scoring(unittest.TestCase):
 
     def test_cross_session_repeat(self):
         p = "write the weekly status update from merged pull requests"
-        hist = [{"s": s, "k": sorted(core.tokens(p))} for s in ("a", "b")]
+        hist = [{"s": s, "k": sorted(core.word_set(p))} for s in ("a", "b")]
         score, sig = core.score_prompt(p, history=hist, session_id="c")
         self.assertIn("repeat_cross", {s["kind"] for s in sig})
         self.assertGreaterEqual(score, 3)
@@ -157,7 +157,7 @@ class Hook(unittest.TestCase):
             run_hook(self.payload(p, session=s), self.home)
         ctx = run_hook(self.payload(p, session="c"), self.home)
         self.assertIn("other session", ctx)
-        # history stores token sets, never raw text
+        # history stores word sets, never raw text
         raw = next((self.home / "history").glob("*.jsonl")).read_text()
         self.assertNotIn("weekly status update", raw)
 

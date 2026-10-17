@@ -2,7 +2,6 @@
 name: metabro
 description: MetaBro, the surfer-bro meta coach. Use for /metabro, for switching its mode (chill, stoked, full send, off), for checking its status, and for "how meta am I", "meta score" or "metabro audit", which scans this project's past sessions and gives a score card plus the top harness fixes.
 argument-hint: "[chill|stoked|full-send|off|status|audit]"
-allowed-tools: Bash, Read
 ---
 
 # MetaBro 🤙

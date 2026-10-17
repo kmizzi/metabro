@@ -90,13 +90,13 @@ def main():
             harness_moves += 1
 
     # Greedy clustering of similar prompts; keep clusters spanning 2+ sessions.
-    toks = [core.tokens(t) for _, t in prompts]
+    words = [core.word_set(t) for _, t in prompts]
     used, clusters = set(), []
-    for i, ti in enumerate(toks):
-        if i in used or len(ti) < core.MIN_TOKENS:
+    for i, ti in enumerate(words):
+        if i in used or len(ti) < core.MIN_WORDS:
             continue
-        members = [i] + [j for j in range(i + 1, len(toks))
-                         if j not in used and core.jaccard(ti, toks[j]) >= core.SIMILAR]
+        members = [i] + [j for j in range(i + 1, len(words))
+                         if j not in used and core.jaccard(ti, words[j]) >= core.SIMILAR]
         sessions = {prompts[m][0] for m in members}
         if len(sessions) >= 2:
             used.update(members)
